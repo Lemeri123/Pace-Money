@@ -13,6 +13,9 @@
 - **Budget Tracking** — visual breakdown of spending vs. budget per category
 - **Streaks & Achievements** — 9 unlockable achievements and daily logging streaks
 - **Onboarding Wizard** — 3-step setup for income and budget limits
+- **Dark/Light Mode** — toggle between dark and light themes with persistent preference
+- **Multi-Currency Support** — switch between USD, EUR, GBP, and INR with currency conversion
+- **Mobile Ready** — responsive design with bottom navigation for mobile devices
 
 ---
 
@@ -21,10 +24,11 @@
 | Layer | Tech |
 |---|---|
 | Frontend | React 18 + TypeScript + Vite |
-| Styling | Tailwind CSS |
+| Styling | Tailwind CSS (with CSS variables for theming) |
 | Auth + Database | Supabase (PostgreSQL + RLS) |
 | AI | Groq API — `llama-3.3-70b-versatile` |
 | Icons | Lucide React |
+| Mobile | Capacitor (for Android/iOS builds) |
 
 ---
 
@@ -54,25 +58,71 @@ Then fill in your `.env`:
 
 ### 3. Set up the database
 
-In your Supabase project, open the **SQL Editor** and run the contents of:
+In your Supabase project, open the **SQL Editor** and run the migrations in order:
 
+1. First, run `supabase/migrations/20260527072908_create_financial_coach_schema.sql`
+2. Then, run `supabase/migrations/20260914100000_add_budget_categories.sql`
+
+This creates all tables with RLS policies:
+
+- `student_profiles` — user settings, income, currency preference
+- `transactions` — spending logs with categories
+- `savings_goals` — goal tracking with progress
+- `achievements` — unlockable badges
+- `streaks` — daily logging streak counter
+
+**Alternative:** If you have the Supabase CLI installed:
+
+```bash
+supabase db push
 ```
-supabase/migrations/20260527072908_create_financial_coach_schema.sql
-```
-
-This creates all 5 tables with RLS policies:
-
-- `student_profiles`
-- `transactions`
-- `savings_goals`
-- `achievements`
-- `streaks`
 
 ### 4. Run the app
 
 ```bash
 npm run dev
 ```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## Building for Android
+
+To test on an Android device:
+
+### Option 1: Browser Testing (Fastest)
+
+Run with network access and open on your phone's browser:
+
+```bash
+npm run dev -- --host
+```
+
+Find your local IP in the terminal output (e.g., `http://192.168.x.x:5173`) and open it in Chrome on your Android device.
+
+### Option 2: Native APK (Full Native Experience)
+
+Requires [Android Studio](https://developer.android.com/studio) installed.
+
+1. **Build the web app:**
+   ```bash
+   npm run build
+   ```
+
+2. **Sync with Capacitor:**
+   ```bash
+   npx cap sync
+   ```
+
+3. **Open in Android Studio:**
+   ```bash
+   npx cap open android
+   ```
+
+4. In Android Studio: **Build → Build Bundle(s)/APK(s) → Build APK(s)**
+
+5. Transfer the `.apk` file to your phone and install it (enable "Install from unknown sources" in Android settings).
 
 ---
 
@@ -81,20 +131,47 @@ npm run dev
 ```
 src/
 ├── components/
-│   ├── AuthPage.tsx       # Sign in / sign up
-│   ├── Layout.tsx         # Sidebar + mobile nav
-│   └── Onboarding.tsx     # 3-step setup wizard
+│   ├── AuthPage.tsx          # Sign in / sign up
+│   ├── Layout.tsx            # Sidebar + mobile nav + theme toggle
+│   ├── Onboarding.tsx        # 3-step setup wizard
+│   ├── CurrencyToggle.tsx    # Currency switcher component
+│   └── MoneyInput.tsx        # Currency-aware input field
 ├── pages/
-│   ├── Dashboard.tsx      # Monthly overview + AI insights
-│   ├── SpendingTracker.tsx# Log + manage transactions
-│   ├── AICoach.tsx        # Chat + affordability checker
-│   ├── SavingsGoals.tsx   # Goals + achievements
-│   └── Settings.tsx       # Profile + budget settings
-└── lib/
-    ├── supabase.ts        # Supabase client + types
-    ├── aiCoach.ts         # Groq API calls
-    └── achievements.ts    # Streak + achievement logic
+│   ├── Dashboard.tsx         # Monthly overview + AI insights
+│   ├── SpendingTracker.tsx   # Log + manage transactions
+│   ├── AICoach.tsx           # Chat + affordability checker
+│   ├── SavingsGoals.tsx      # Goals + achievements
+│   └── Settings.tsx          # Profile + budget settings
+├── lib/
+│   ├── supabase.ts           # Supabase client + types
+│   ├── aiCoach.ts            # Groq API calls
+│   ├── achievements.ts       # Streak + achievement logic
+│   ├── budgets.ts            # Budget calculations
+│   ├── currency.ts           # Currency conversion utilities
+│   └── useTheme.ts           # Dark/light mode hook
+└── index.css                 # Global styles + CSS variables for theming
 ```
+
+---
+
+## Key Features Explained
+
+### Theme System
+- Uses Tailwind's `class` strategy with CSS variables
+- Persists preference to `localStorage`
+- Prevents flash of wrong theme on load with inline script
+- Toggle available in sidebar (desktop) and top bar (mobile)
+
+### Currency System
+- Supports USD ($), EUR (€), GBP (£), INR (₹)
+- Real-time conversion using base rates
+- Saves preference to user profile in Supabase
+- All amounts stored in base currency, displayed in user's choice
+
+### Authentication & Data
+- Supabase Auth for email/password login
+- Row Level Security (RLS) ensures users only see their own data
+- Auto-refreshes session without full page reload (optimized to prevent tab-switch reloads)
 
 ---
 
