@@ -23,14 +23,18 @@ export default function App() {
   const { theme, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
-    // onAuthStateChange fires immediately with the current session,
-    // so we don't need getSession() separately — avoids double loadProfile
+    let lastUserId: string | null = null;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
-      if (u) {
+      
+      // Only reload profile if the user actually changed
+      if (u && u.id !== lastUserId) {
+        lastUserId = u.id;
         loadProfile(u.id);
-      } else {
+      } else if (!u) {
+        lastUserId = null;
         setProfile(null);
         setStreak(null);
         setLoading(false);
