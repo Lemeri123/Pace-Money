@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StudentProfile } from '../lib/supabase';
 import { canIAfford, getBudgetAdvice } from '../lib/aiCoach';
 import { formatMoney, amountFromInput } from '../lib/currency';
@@ -23,16 +23,35 @@ const QUICK_PROMPTS = [
   { label: 'Emergency fund', text: 'How do I build an emergency fund on a student budget?' },
 ];
 
+const STORAGE_KEY = 'ai-coach-messages';
+
 export default function AICoach({ profile }: Props) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [{
+          id: '0',
+          role: 'assistant',
+          content: `Hey${profile.name ? ` ${profile.name}` : ''}! 👋 I'm your AI financial coach. Ask me anything about your money — like "Can I afford AirPods?" or "How do I save for a trip?" You can also use the affordability checker below!`,
+        }];
+      }
+    }
+    return [{
       id: '0',
       role: 'assistant',
       content: `Hey${profile.name ? ` ${profile.name}` : ''}! 👋 I'm your AI financial coach. Ask me anything about your money — like "Can I afford AirPods?" or "How do I save for a trip?" You can also use the affordability checker below!`,
-    },
-  ]);
+    }];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages]);
 
   // Affordability checker
   const [showAfford, setShowAfford] = useState(true);

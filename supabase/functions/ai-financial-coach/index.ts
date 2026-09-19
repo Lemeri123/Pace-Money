@@ -1,4 +1,4 @@
-// Edge Runtime types are automatically available
+/// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,41 +6,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-interface FinancialCoachRequest {
-  action: "analyze_spending" | "can_i_afford" | "get_budget_advice" | "categorize_transaction" | "roast_spending";
-  profile?: {
-    name: string;
-    monthly_income: number;
-    budgets: Record<string, number>;
-  };
-  transactions?: Array<{
-    description: string;
-    amount: number;
-    category: string;
-    transaction_date: string;
-  }>;
-  question?: string;
-  item?: {
-    name: string;
-    cost: number;
-  };
-  transaction?: {
-    description: string;
-    amount: number;
-  };
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   try {
-    const body: FinancialCoachRequest = await req.json();
+    const body = await req.json();
     const apiKey = Deno.env.get("GROQ_API_KEY");
 
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: "AI service not configured. Please add your GROQ_API_KEY secret." }), {
+      return new Response(JSON.stringify({ error: "AI service not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -50,53 +26,30 @@ Deno.serve(async (req: Request) => {
     let userMessage = "";
 
     if (body.action === "categorize_transaction" && body.transaction) {
-      systemPrompt = `You are a financial categorization assistant for students.
-      Categorize transactions into one of: food, transport, entertainment, education, shopping, health, snacks, other.
-      Also determine if it's an "unnecessary" purchase.
-      Respond in JSON only: {"category": "...", "is_unnecessary": true/false}`;
-      userMessage = `Categorize this transaction: "${body.transaction.description}" for $${body.transaction.amount}`;
+      systemPrompt = "Categorize into: food, transport, entertainment, education, shopping, health, snacks, other. JSON only: {\"category\": \"...\", \"is_unnecessary\": true/false}";
+      userMessage = `"${body.transaction.description}" ${body.transaction.amount}`;
     } else if (body.action === "roast_spending" && body.transactions) {
-      systemPrompt = `You are a witty but supportive financial coach for students.
-      Your job is to humorously roast bad spending habits while still being encouraging.
-      Be funny and use relatable student references. Keep it under 2 sentences.
-      Example: "You spent more on bubble tea than on books this month — your wallet is crying harder than you during finals."`;
-
-      const categoryTotals: Record<string, number> = {};
-      for (const t of body.transactions) {
-        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
-      }
-      userMessage = `Roast these monthly spending totals: ${JSON.stringify(categoryTotals)}. Student name: ${body.profile?.name || "Student"}`;
+      systemPrompt = "Roast bad spending in 1-2 funny sentences.";
+      const totals: Record<string, number> = {};
+      for (const t of body.transactions) totals[t.category] = (totals[t.category] || 0) + t.amount;
+      userMessage = `${JSON.stringify(totals)}`;
     } else if (body.action === "can_i_afford" && body.item && body.profile) {
-      systemPrompt = `You are a friendly, practical AI financial coach for students.
-      Give honest, simple advice about whether they can afford something.
-      Consider their monthly income and typical expenses.
-      Be encouraging but realistic. Keep response under 100 words.
-      Use simple language, no jargon.`;
-      userMessage = `Can I afford ${body.item.name} that costs $${body.item.cost}?
-      My monthly income is $${body.profile.monthly_income}.
-      My budgets: ${JSON.stringify(body.profile.budgets)}.
-      ${body.question ? `Also: ${body.question}` : ""}`;
+      systemPrompt = "Give SHORT affordability advice in 2-3 sentences. Be friendly and direct. Plain text only - NO asterisks, NO formatting.";
+      userMessage = `Can I afford ${body.item.name} for ${body.item.cost}? I earn ${body.profile.monthly_income} monthly. ${body.question || ""}`;
     } else if (body.action === "analyze_spending" && body.transactions && body.profile) {
-      systemPrompt = `You are an AI financial coach for students. Analyze spending patterns and give 3 specific, actionable tips.
-      Be encouraging, use simple language. Format as a short paragraph followed by 3 bullet points.`;
-
-      const categoryTotals: Record<string, number> = {};
+      systemPrompt = "Analyze spending and give 2-3 SHORT actionable tips. Be encouraging. Write naturally in plain text - NO asterisks, NO bullets, NO formatting.";
+      const totals: Record<string, number> = {};
       let total = 0;
       for (const t of body.transactions) {
-        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+        totals[t.category] = (totals[t.category] || 0) + t.amount;
         total += t.amount;
       }
-      userMessage = `Analyze spending for ${body.profile.name}. Monthly income: $${body.profile.monthly_income}.
-      This month spent $${total} total. Breakdown: ${JSON.stringify(categoryTotals)}.
-      Give personalized advice.`;
+      userMessage = `I earn ${body.profile.monthly_income} and spent ${total} this month: ${JSON.stringify(totals)}. Give me advice.`;
     } else if (body.action === "get_budget_advice" && body.profile) {
-      systemPrompt = `You are a friendly AI financial coach for students. Create a simple, practical budget plan.
-      Use the 50/30/20 rule adapted for students. Be encouraging and specific. Keep it under 150 words.`;
-      userMessage = `Create a budget plan for ${body.profile.name}. Monthly income: $${body.profile.monthly_income}.
-      Current budgets: ${JSON.stringify(body.profile.budgets)}.
-      ${body.question || "Give me advice on how to budget better."}`;
+      systemPrompt = "You're a friendly financial coach. Give SHORT, practical budget advice in 2-3 natural sentences. Be conversational like texting a friend. NO asterisks, NO markdown, NO numbered lists, NO formatting - just plain text.";
+      userMessage = `I earn ${body.profile.monthly_income} monthly. ${body.question || "Give me budget tips."}`;
     } else {
-      return new Response(JSON.stringify({ error: "Invalid action or missing data" }), {
+      return new Response(JSON.stringify({ error: "Invalid action" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -109,8 +62,9 @@ Deno.serve(async (req: Request) => {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        max_tokens: 300,
+        model: "groq/compound",
+        max_tokens: 150,
+        temperature: 0.7,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
@@ -120,8 +74,7 @@ Deno.serve(async (req: Request) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Groq API error:", errText);
-      return new Response(JSON.stringify({ error: "AI service error" }), {
+      return new Response(JSON.stringify({ error: "AI error", details: errText }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -147,8 +100,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Edge function error:", err);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    return new Response(JSON.stringify({ error: "Error", message: err instanceof Error ? err.message : "Unknown" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
