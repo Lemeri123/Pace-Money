@@ -13,8 +13,6 @@
 - **Budget Tracking** — visual breakdown of spending vs. budget per category
 - **Streaks & Achievements** — 9 unlockable achievements and daily logging streaks
 - **Onboarding Wizard** — 3-step setup for income and budget limits
-- **Dark/Light Mode** — toggle between dark and light themes with persistent preference
-- **Multi-Currency Support** — switch between USD, EUR, GBP, and INR with currency conversion
 - **Mobile Ready** — responsive design with bottom navigation for mobile devices
 
 ---
@@ -27,7 +25,6 @@
 | Styling | Tailwind CSS (with CSS variables for theming) |
 | Auth + Database | Supabase (PostgreSQL + RLS) |
 | AI | Groq API — `llama-3.3-70b-versatile` |
-| Icons | Lucide React |
 | Mobile | Capacitor (for Android/iOS builds) |
 
 ---
@@ -117,6 +114,7 @@ Requires [Android Studio](https://developer.android.com/studio) installed.
 
 3. **Open in Android Studio:**
    ```bash
+   export CAPACITOR_ANDROID_STUDIO_PATH=/snap/bin/android-studio
    npx cap open android
    ```
 
@@ -151,29 +149,6 @@ src/
 │   └── useTheme.ts           # Dark/light mode hook
 └── index.css                 # Global styles + CSS variables for theming
 ```
-
----
-
-## Key Features Explained
-
-### Theme System
-- Uses Tailwind's `class` strategy with CSS variables
-- Persists preference to `localStorage`
-- Prevents flash of wrong theme on load with inline script
-- Toggle available in sidebar (desktop) and top bar (mobile)
-
-### Currency System
-- Supports USD ($), EUR (€), GBP (£), INR (₹)
-- Real-time conversion using base rates
-- Saves preference to user profile in Supabase
-- All amounts stored in base currency, displayed in user's choice
-
-### Authentication & Data
-- Supabase Auth for email/password login
-- Row Level Security (RLS) ensures users only see their own data
-- Auto-refreshes session without full page reload (optimized to prevent tab-switch reloads)
-
----
 
 ## Environment Variables
 
