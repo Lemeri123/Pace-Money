@@ -4,7 +4,7 @@ import { AppCurrency, amountFromInput, formatMoney, normalizeCurrency } from '..
 import { getBudgetCategories, legacyBudgetFields, slugifyCategory } from '../lib/budgets';
 import CurrencyToggle from '../components/CurrencyToggle';
 import MoneyInput from '../components/MoneyInput';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { Plus, Save, Trash2, LogOut } from 'lucide-react';
 
 interface Props {
   profile: StudentProfile;
@@ -231,6 +231,15 @@ export default function Settings({ profile, onUpdate }: Props) {
           {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
         </button>
       </form>
+
+      {/* Sign Out Button */}
+      <button
+        onClick={() => supabase.auth.signOut()}
+        className="w-full flex items-center justify-center gap-2 bg-steel/20 hover:bg-steel/30 text-mist hover:text-snow font-medium py-3 rounded-xl transition-all text-sm border border-steel mt-4"
+      >
+        <LogOut size={15} />
+        Sign Out
+      </button>
     </div>
   );
 }

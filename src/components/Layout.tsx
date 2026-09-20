@@ -1,4 +1,4 @@
-import { TrendingUp, LayoutDashboard, Receipt, MessageSquare, Target, Settings, LogOut, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Receipt, MessageSquare, Target, Settings, LogOut, Sun, Moon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { AppCurrency, normalizeCurrency } from '../lib/currency';
 import CurrencyToggle from './CurrencyToggle';
@@ -100,9 +100,7 @@ export default function Layout({ current, onNavigate, children, streakCount = 0,
         {onCurrencyChange && (
           <div className="md:hidden sticky top-0 z-20 bg-ink/95 dark:bg-ink/95 backdrop-blur border-b border-dusk px-4 py-2.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-glow rounded-md flex items-center justify-center">
-                <TrendingUp size={12} className="text-ink" />
-              </div>
+              <img src="/logo.png" alt="Pace Money Logo" className="w-6 h-6 object-contain rounded-md" />
               <span className="text-snow font-semibold text-sm truncate">Pace Money</span>
             </div>
             <div className="flex items-center gap-2">

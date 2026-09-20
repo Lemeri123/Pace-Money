@@ -3,7 +3,7 @@ import { supabase, StudentProfile, Transaction, SavingsGoal, Streak } from '../l
 import { analyzeSpending } from '../lib/aiCoach';
 import { formatMoney } from '../lib/currency';
 import { getBudgetCategories } from '../lib/budgets';
-import { TrendingDown, TrendingUp, Target, Zap, Sparkles, RefreshCw } from 'lucide-react';
+import { TrendingDown, TrendingUp, Target, Zap, Sparkles, RefreshCw, LogOut } from 'lucide-react';
 
 
 interface Props {
