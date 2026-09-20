@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { supabase, StudentProfile, Streak } from './lib/supabase';
 import { AppCurrency } from './lib/currency';
 import { useTheme } from './lib/useTheme';
-import { getCurrentUsername } from './lib/customAuth';
 import type { User } from '@supabase/supabase-js';
 import AuthPage from './components/AuthPage';
 import Onboarding from './components/Onboarding';
@@ -86,7 +85,7 @@ export default function App() {
 
   if (!user) return <AuthPage />;
   if (!profile?.onboarded) {
-    const displayName = getCurrentUsername() || 'User';
+    const displayName = user.email?.split('@')[0] || 'User';
     return <Onboarding userId={user.id} displayName={displayName} onComplete={() => loadProfile(user.id)} />;
   }
 

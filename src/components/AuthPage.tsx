@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '../lib/useTheme';
-import { signUp, signIn } from '../lib/customAuth';
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -16,14 +16,19 @@ export default function AuthPage() {
     setLoading(true);
     setError('');
 
-    const result = mode === 'signup'
-      ? await signUp(username, password)
-      : await signIn(username, password);
-
-    if (result.error) {
-      setError(result.error);
+    if (mode === 'signup') {
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: undefined,
+        }
+      });
+      if (error) setError(error.message);
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
     }
-    // If successful, App.tsx will detect the auth state change
     setLoading(false);
   }
 
@@ -71,14 +76,13 @@ export default function AuthPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-snow text-sm font-medium mb-1.5">Username</label>
+              <label className="block text-snow text-sm font-medium mb-1.5">Email</label>
               <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 required
-                minLength={3}
-                placeholder="Choose a username"
+                placeholder="you@example.com"
                 className="w-full bg-dusk border border-steel text-snow rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-steel focus:border-transparent placeholder-mist"
               />
             </div>
