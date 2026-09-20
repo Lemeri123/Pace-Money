@@ -1,7 +1,7 @@
 import { TrendingUp, LayoutDashboard, Receipt, MessageSquare, Target, Settings, LogOut, Sun, Moon } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { AppCurrency, normalizeCurrency } from '../lib/currency';
 import CurrencyToggle from './CurrencyToggle';
+import { signOut } from '../lib/customAuth';
 import type { Theme } from '../lib/useTheme';
 
 type Page = 'dashboard' | 'tracker' | 'coach' | 'goals' | 'settings';
@@ -86,7 +86,7 @@ export default function Layout({ current, onNavigate, children, streakCount = 0,
             </button>
           )}
           <button
-            onClick={() => supabase.auth.signOut()}
+            onClick={() => signOut()}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-mist hover:text-snow hover:bg-dusk transition-all"
           >
             <LogOut size={17} />

@@ -150,6 +150,24 @@ src/
 └── index.css                 # Global styles + CSS variables for theming
 ```
 
+---
+
+## Authentication
+
+This app uses **username + password authentication** (no email required):
+
+- Users create an account with a username (3+ characters) and password (6+ characters)
+- No email confirmation needed - instant signup
+- Usernames are stored in user metadata and visible in Supabase dashboard
+- Internally converts usernames to email format (`username@pacemoney.app`) for Supabase compatibility
+
+**To view users in Supabase:**
+- Go to **Authentication → Users** in your dashboard
+- You'll see entries like `john@pacemoney.app` - the username is the part before `@`
+- Or check the **User Metadata** column to see the actual username
+
+---
+
 ## Environment Variables
 
 ```env
